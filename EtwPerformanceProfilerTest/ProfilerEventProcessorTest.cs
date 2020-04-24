@@ -7,6 +7,1058 @@ namespace EtwPerformanceProfilerTest
     [TestClass]
     public class ProfilerEventProcessorTest
     {
+        /*
+        /// <summary>
+        /// OnRun()
+        ///     Country.GET('LT');
+        ///     Country.MODIFY(TRUE);
+        ///         OnModify()
+        ///             "Last Modified Date-Time" := CURRENTDATETIME;
+        ///         GetGlobalTriggerMask(...)
+        ///             OnAfterGetGlobalTableTriggerMask(TableID,TableTriggerMask) // publisher without subscribers - execute then stop
+        ///             EXIT(TableTriggerMask)
+        ///         SQL QUERY
+        ///         GetDatabaseTableTriggerSetup(...) // no code in C1 function - only stop event
+        ///         CountryOnAfterModify(...) // subscriber
+        ///             Rec.Code += '';
+        ///         CountryOnAfterModify2(...) // subscriber
+        ///             Rec.Code += '';
+        ///         CountryOnAfterModify3(...) // subscriber
+        ///             Rec.Code += '';
+        ///     Country.Code += '';
+        /// </summary>
+        [TestMethod]
+        public void BuildAggregatedCallTreeSqlAfterFunctionTest()
+        {
+            List<ProfilerEvent> profilerEventList = new List<ProfilerEvent>
+                {
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "OnRun"
+                    }, // 0
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "Country.GET('LT')"
+                    }, // 1
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "Country.MODIFY(TRUE)"
+                    }, // 2
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 9,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "OnModify"
+                    }, // 3
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 9,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "\"Last Modified Date Time\" := CURRENTDATETIME"
+                    }, // 4
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 9,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "OnModify"
+                    }, // 5
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "GetGlobalTriggerMask"
+                    }, // 6
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "OnAfterGetGlobalTableTriggerMask(TableID,TableTriggerMask)"
+                    }, // 7
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "OnAfterGetGlobalTableTriggerMask"
+                    }, // 8
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "EXIT(TableTriggerMask)"
+                    }, // 9
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "GetGlobalTriggerMask"
+                    }, // 10
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "GetDatabaseTableTriggerSetup"
+                    }, // 11
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        StatementName = "SQL"
+                    }, // 12
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        StatementName = "SQL"
+                    }, // 13
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "CountryOnAfterModify"
+                    }, // 14
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "Rec.Code += ''"
+                    }, // 15
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "CountryOnAfterModify"
+                    }, // 16
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "CountryOnAfterModify2"
+                    }, // 17
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "Rec.Code += ''"
+                    }, // 18
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "CountryOnAfterModify2"
+                    }, // 19
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "CountryOnAfterModify3"
+                    }, // 20
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "Rec.Code += ''"
+                    }, // 21
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "CountryOnAfterModify3"
+                    }, // 22
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "Country.Code += ''"
+                    }, // 23
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 50000,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "OnRun"
+                    }, // 24
+                };
+
+            AggregatedEventNode aggregatedCallTree = BuildAggregatedCallTree(profilerEventList);
+
+            AggregatedEventNode expected = new AggregatedEventNode();
+            AggregatedEventNode currentNode = expected;
+
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +OnRun
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +Country.GET('LT')
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -Country.GET('LT')
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[2]); // +Country.MODIFY(TRUE)
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +"Last Modified Date-Time" := CURRENTDATETIME
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -Country.MODIFY(TRUE)
+
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -var1 += 1
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -foo
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +SQL
+            currentNode.PopEventFromCallStackAndCalculateDuration(0); // -SQL
+
+            AssertAggregatedEventNode(expected, aggregatedCallTree);
+        }*/
+
+        /// <summary>
+        /// 
+        /// stmt
+        ///     SQL
+        ///     SystemCall
+        ///       stmt2
+        ///       stmt3
+        ///     (EmptySystemCall)
+        ///     SQL
+        /// </summary>
+        [TestMethod]
+        public void StatementWithSystemCallAndEmptySystemCallTest()
+        {
+            List<ProfilerEvent> profilerEventList = new List<ProfilerEvent>
+                {
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt",
+                        FunctionName = "f"
+                    }, // 0
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 1
+                    
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 2
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 3
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt2",
+                        FunctionName = "SystemCall"
+                    }, // 4
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt3",
+                        FunctionName = "SystemCall"
+                    }, // 5
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 6
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "EmptySystemCall"
+                    }, // 7
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 8
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 9
+                };
+
+            AggregatedEventNode aggregatedCallTree = BuildAggregatedCallTree(profilerEventList);
+
+            AggregatedEventNode expected = new AggregatedEventNode();
+            AggregatedEventNode currentNode = expected;
+
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +stmt
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +sql
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +stmt2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt2
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[5]); // +stmt3
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt3
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[8]); // +sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt
+
+            AssertAggregatedEventNode(expected, aggregatedCallTree);
+        }
+
+        /// <summary>
+        /// 
+        /// stmt
+        ///     SQL
+        ///     SystemCall
+        ///       stmt2
+        ///       stmt3
+        ///     SystemCall2
+        ///       stmt4
+        ///       stmt5
+        ///     (EmptySystemCall)
+        ///     SQL
+        /// </summary>
+        [TestMethod]
+        public void StatementWithTwoSystemCallsAndEmptySystemCallTest()
+        {
+            List<ProfilerEvent> profilerEventList = new List<ProfilerEvent>
+                {
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt",
+                        FunctionName = "f"
+                    }, // 0
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 1
+                    
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 2
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 3
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt2",
+                        FunctionName = "SystemCall"
+                    }, // 4
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt3",
+                        FunctionName = "SystemCall"
+                    }, // 5
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 6
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall2"
+                    }, // 7
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt4",
+                        FunctionName = "SystemCall2"
+                    }, // 8
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt5",
+                        FunctionName = "SystemCall2"
+                    }, // 9
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall2"
+                    }, // 10
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "EmptySystemCall"
+                    }, // 11
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 12
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 13
+                };
+
+            AggregatedEventNode aggregatedCallTree = BuildAggregatedCallTree(profilerEventList);
+
+            AggregatedEventNode expected = new AggregatedEventNode();
+            AggregatedEventNode currentNode = expected;
+
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +stmt
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +sql
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +stmt2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt2
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[5]); // +stmt3
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt3
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[8]); // +stmt4
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt4
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[9]); // +stmt5
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt5
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[12]); // +sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt
+
+            AssertAggregatedEventNode(expected, aggregatedCallTree);
+        }
+
+        /// <summary>
+        /// 
+        /// stmt
+        ///     SQL
+        ///     SystemCall
+        ///       stmt2
+        ///       stmt3
+        ///     SystemCall2
+        ///       stmt4
+        ///       stmt5
+        ///     SQL
+        /// </summary>
+        [TestMethod]
+        public void StatementWithSqlThenTwoSystemCallsAndThenSqlTest()
+        {
+            List<ProfilerEvent> profilerEventList = new List<ProfilerEvent>
+                {
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt",
+                        FunctionName = "f"
+                    }, // 0
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 1
+                    
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 2
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 3
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt2",
+                        FunctionName = "SystemCall"
+                    }, // 4
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt3",
+                        FunctionName = "SystemCall"
+                    }, // 5
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 6
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall2"
+                    }, // 7
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt4",
+                        FunctionName = "SystemCall2"
+                    }, // 8
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt5",
+                        FunctionName = "SystemCall2"
+                    }, // 9
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall2"
+                    }, // 10
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 11
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 12
+                };
+
+            AggregatedEventNode aggregatedCallTree = BuildAggregatedCallTree(profilerEventList);
+
+            AggregatedEventNode expected = new AggregatedEventNode();
+            AggregatedEventNode currentNode = expected;
+
+            /*
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +stmt
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +sql
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +stmt2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt2
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[5]); // +stmt3
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt3
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[8]); // +stmt4
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt4
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[9]); // +stmt5
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt5
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[11]); // +sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt
+            */
+
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +stmt
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +sql
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +stmt2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt2
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[5]); // +stmt3
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt3
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[8]); // +stmt4
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt4
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[9]); // +stmt5
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt5
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[11]); // +sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt
+
+            AssertAggregatedEventNode(expected, aggregatedCallTree);
+        }
+
+        /// <summary>
+        /// 
+        /// stmt
+        ///     SQL
+        ///     SystemCall
+        ///       stmt2
+        ///       stmt3
+        ///     SQL
+        /// </summary>
+        [TestMethod]
+        public void StatementWithSqlThenSystemCallAndThenSqlTest()
+        {
+            List<ProfilerEvent> profilerEventList = new List<ProfilerEvent>
+                {
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt",
+                        FunctionName = "f"
+                    }, // 0
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 1
+                    
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "sql"
+                    }, // 2
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 3
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt2",
+                        FunctionName = "SystemCall"
+                    }, // 4
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt3",
+                        FunctionName = "SystemCall"
+                    }, // 5
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "SystemCall"
+                    }, // 6
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 7
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 8
+                };
+
+            AggregatedEventNode aggregatedCallTree = BuildAggregatedCallTree(profilerEventList);
+
+            AggregatedEventNode expected = new AggregatedEventNode();
+            AggregatedEventNode currentNode = expected;
+
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +stmt
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +sql
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +stmt2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt2
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[5]); // +stmt3
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt3
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[7]); // +sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -sql2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt
+
+            AssertAggregatedEventNode(expected, aggregatedCallTree);
+        }
+
+        /// <summary>
+        /// 
+        /// f()
+        ///     stmt
+        ///     onEvent()
+        ///     stmt
+        /// </summary>
+        [TestMethod]
+        public void EmptyFunctionTest()
+        {
+            List<ProfilerEvent> profilerEventList = new List<ProfilerEvent>
+                {
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "f"
+                    }, // 0
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt",
+                        FunctionName = "f"
+                    }, // 1
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "onEvent()",
+                        FunctionName = "f"
+                    }, // 2
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "onEvent"
+                    }, // 3
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt2",
+                        FunctionName = "f"
+                    }, // 4
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "f"
+                    }, // 5
+                };
+
+            AggregatedEventNode aggregatedCallTree = BuildAggregatedCallTree(profilerEventList);
+
+            AggregatedEventNode expected = new AggregatedEventNode();
+            AggregatedEventNode currentNode = expected;
+
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +f
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +stmt
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[2]); // +onEvent()
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -onEvent()
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +stmt2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt2
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -f
+
+            AssertAggregatedEventNode(expected, aggregatedCallTree);
+        }
+
+        /*
+        /// <summary>
+        /// 
+        /// f()
+        ///     stmt
+        ///     onEvent()
+        ///     SQL
+        /// </summary>
+        [TestMethod]
+        public void EmptyFunctionStopAfterSQLStatementTest()
+        {
+            List<ProfilerEvent> profilerEventList = new List<ProfilerEvent>
+                {
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "f"
+                    }, // 0
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "stmt",
+                        FunctionName = "f"
+                    }, // 1
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.Statement,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "onEvent()",
+                        FunctionName = "f"
+                    }, // 2
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.AlEvent,
+                        StatementName = "onEvent"
+                    }, // 3
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StartMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 4
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 0,
+                        Type = EventType.StopMethod,
+                        SubType = EventSubType.SqlEvent,
+                        StatementName = "SQL"
+                    }, // 5
+
+                    new ProfilerEvent
+                    {
+                        SessionId = 1,
+                        ObjectId = 1,
+                        Type = EventType.StopMethod,
+                        StatementName = "f"
+                    }, // 6
+                };
+
+            AggregatedEventNode aggregatedCallTree = BuildAggregatedCallTree(profilerEventList);
+
+            AggregatedEventNode expected = new AggregatedEventNode();
+            AggregatedEventNode currentNode = expected;
+
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[0]); // +f
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[1]); // +stmt
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -stmt
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[2]); // +onEvent()
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -onEvent()
+            currentNode = currentNode.PushEventIntoCallStack(profilerEventList[4]); // +SQL
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -SQL
+            currentNode = currentNode.PopEventFromCallStackAndCalculateDuration(0); // -f
+
+            AssertAggregatedEventNode(expected, aggregatedCallTree);
+        }
+        */
+
+        /* !! database transactions will be grouped under calling statement
         /// <summary>
         /// 
         /// foo();
@@ -87,7 +1139,9 @@ namespace EtwPerformanceProfilerTest
 
             AssertAggregatedEventNode(expected, aggregatedCallTree);
         }
+        */
 
+        /* same as above
         /// <summary>
         /// 
         /// OpenConnection - Start
@@ -211,7 +1265,9 @@ namespace EtwPerformanceProfilerTest
 
             AssertAggregatedEventNode(expected, aggregatedCallTree);
         }
+        */
 
+        /*
         /// <summary>
         /// 
         /// OpenConnection - Start
@@ -305,6 +1361,7 @@ namespace EtwPerformanceProfilerTest
 
             AssertAggregatedEventNode(expected, aggregatedCallTree);
         }
+        */
 
         /// <summary>
         /// 
@@ -1209,6 +2266,7 @@ namespace EtwPerformanceProfilerTest
         /// <returns>An instance of an AggregatedEventNode tree.</returns>
         internal static AggregatedEventNode BuildAggregatedCallTree(IList<ProfilerEvent> profilerEvents)
         {
+            Stack<ProfilerEvent> callStack = new Stack<ProfilerEvent>();
             AggregatedEventNode aggregatedCallTree = new AggregatedEventNode();
             AggregatedEventNode currentAggregatedEventNode = aggregatedCallTree;
 
@@ -1220,13 +2278,13 @@ namespace EtwPerformanceProfilerTest
                 currentProfilerEvent = profilerEvents[i];
 
                 if (SingleSessionEventAggregator.AddProfilerEventToAggregatedCallTree(previousProfilerEvent,
-                    currentProfilerEvent, ref currentAggregatedEventNode))
+                    currentProfilerEvent, ref currentAggregatedEventNode, ref callStack))
                 {
                     previousProfilerEvent = currentProfilerEvent;
                 }
             }
 
-            SingleSessionEventAggregator.AddProfilerEventToAggregatedCallTree(previousProfilerEvent, null, ref currentAggregatedEventNode);
+            SingleSessionEventAggregator.AddProfilerEventToAggregatedCallTree(previousProfilerEvent, null, ref currentAggregatedEventNode, ref callStack);
 
             return aggregatedCallTree;
         }

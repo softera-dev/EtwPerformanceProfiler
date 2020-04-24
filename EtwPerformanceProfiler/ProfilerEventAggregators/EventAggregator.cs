@@ -87,6 +87,7 @@ namespace EtwPerformanceProfiler
         protected ProfilerEvent? GetProfilerEvent(TraceEvent traceEvent)
         {
             string statement = "";
+            string functionName = "";
             EventType eventType = EventType.None;
             EventSubType eventSubType = EventSubType.None;
             string objectType = string.Empty;
@@ -99,6 +100,7 @@ namespace EtwPerformanceProfiler
             {
                 case NavEvents.ALFunctionStart:
                     statement = (string)traceEvent.PayloadByName("functionName");
+                    functionName = (string)traceEvent.PayloadByName("functionName");
                     objectType = (string)traceEvent.PayloadByName("objectType");
                     objectId = (int)traceEvent.PayloadByName("objectId");
                     eventType = EventType.StartMethod;
@@ -106,6 +108,7 @@ namespace EtwPerformanceProfiler
                     break;
                 case NavEvents.ALFunctionStop:
                     statement = (string)traceEvent.PayloadByName("functionName");
+                    functionName = (string)traceEvent.PayloadByName("functionName");
                     objectType = (string)traceEvent.PayloadByName("objectType");
                     objectId = (int)traceEvent.PayloadByName("objectId");
                     eventType = EventType.StopMethod;
@@ -113,6 +116,7 @@ namespace EtwPerformanceProfiler
                     break;
                 case NavEvents.ALFunctionStatement:
                     statement = (string)traceEvent.PayloadByName("statement");
+                    functionName = (string)traceEvent.PayloadByName("functionName");
                     objectType = (string)traceEvent.PayloadByName("objectType");
                     objectId = (int)traceEvent.PayloadByName("objectId");
                     lineNo = (int)traceEvent.PayloadByName("lineNumber");
@@ -212,7 +216,8 @@ namespace EtwPerformanceProfiler
                 ObjectId = objectId,
                 LineNo = lineNo,
                 StatementName = GetStatementFromTheCache(statement),
-                TimeStampRelativeMSec = traceEvent.TimeStampRelativeMSec
+                TimeStampRelativeMSec = traceEvent.TimeStampRelativeMSec,
+                FunctionName = functionName
             };
 
         }

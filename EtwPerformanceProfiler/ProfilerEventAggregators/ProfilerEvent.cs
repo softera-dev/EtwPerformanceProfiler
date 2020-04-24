@@ -101,6 +101,11 @@ namespace EtwPerformanceProfiler
         internal string StatementName { get; set; }
 
         /// <summary>
+        /// Gets or sets the name of the function this statement belongs to.
+        /// </summary>
+        internal string FunctionName { get; set; }
+
+        /// <summary>
         /// Gets or sets the time stamp in 100ns.
         /// </summary>
         internal double TimeStampRelativeMSec { get; set; }

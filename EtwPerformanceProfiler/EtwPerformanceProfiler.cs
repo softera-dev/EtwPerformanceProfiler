@@ -62,6 +62,17 @@ namespace EtwPerformanceProfiler
         }
 
         /// <summary>
+        /// Gets the call tree's current function name.
+        /// </summary>
+        public string CallTreeCurrentFunctionName
+        {
+            get
+            {
+                return this.callTree.Current.FunctionName;
+            }
+        }
+
+        /// <summary>
         /// Gets the current line number on the call tree.
         /// </summary>
         public int CallTreeCurrentStatementLineNo

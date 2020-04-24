@@ -43,6 +43,11 @@ namespace EtwPerformanceProfiler
         public string StatementName { get; set; }
 
         /// <summary>
+        /// Gets or sets the name of the function statement is in.
+        /// </summary>
+        public string FunctionName { get; set; }
+
+        /// <summary>
         /// Gets or sets the duration in MS.
         /// </summary>
         public double DurationMSec { get; set; }
@@ -127,7 +132,21 @@ namespace EtwPerformanceProfiler
                 return this.SubType == EventSubType.AlEvent;
             }
         }
-             
+
+        /// <summary>
+        /// Returns true if this is node is executing function.
+        /// </summary>
+        /// <remarks>
+        /// Used to decide whether or not to return to calling node after
+        /// function or sql statement ended before executing next statement.
+        /// 
+        /// Eg 1. OnRun will have some SQL events at the start and then statement,
+        /// and current node should be statement executing OnRun.
+        /// Eg 2. MODIFY will have some SQL events at the start and then statement,
+        /// but that statement has to be added to parent that called MODIFY.
+        /// </remarks>
+        internal bool IsExecutingFunction { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AggregatedEventNode"/> class.
         /// </summary>
@@ -177,6 +196,7 @@ namespace EtwPerformanceProfiler
                     OriginalType = profilerEvent.Type,
                     EvaluatedType = profilerEvent.Type,
                     SubType = profilerEvent.SubType,
+                    FunctionName = profilerEvent.FunctionName,
                 };
 
             this.Children.Add(res);

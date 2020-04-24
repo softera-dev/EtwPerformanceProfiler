@@ -1,0 +1,778 @@
+OBJECT Table 17026001 Performance Profiler Events
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20-04-27;
+    Time=09:38:37;
+    Modified=Yes;
+    Version List=Performance Profiler;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Id                  ;Integer        }
+    { 2   ;   ;Session ID          ;Integer        }
+    { 3   ;   ;Indentation         ;Integer        }
+    { 4   ;   ;Object Type         ;Option        ;CaptionML=ENU=Object Type;
+                                                   OptionCaptionML=ENU=TableData,Table,Form,Report,Dataport,Codeunit,XMLport,MenuSuite,Page,Query,System,FieldNumber;
+                                                   OptionString=TableData,Table,Form,Report,Dataport,Codeunit,XMLport,MenuSuite,Page,Query,System,FieldNumber }
+    { 5   ;   ;Object ID           ;Integer       ;TableRelation=Object.ID WHERE (Type=FIELD(Object Type));
+                                                   TestTableRelation=No;
+                                                   CaptionML=ENU=Object ID }
+    { 6   ;   ;Line No             ;Integer        }
+    { 7   ;   ;Statement           ;Text250        }
+    { 8   ;   ;Duration            ;Decimal        }
+    { 9   ;   ;MinDuration         ;Decimal        }
+    { 10  ;   ;MaxDuration         ;Decimal        }
+    { 11  ;   ;LastActive          ;Decimal        }
+    { 12  ;   ;HitCount            ;Integer        }
+    { 13  ;   ;Total               ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Performance Profiler Events".Duration WHERE (Indentation=CONST(0))) }
+    { 14  ;   ;FullStatement       ;BLOB           }
+    { 15  ;   ;Function Name       ;Text250        }
+  }
+  KEYS
+  {
+    {    ;Id,Session ID                           ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      DeleteArchiveQst@1001 : TextConst 'ENU=Existing lines of the archived session %1 will be deleted. Do you want to continue?';
+      CopyedToArchMsg@1000 : TextConst 'ENU=Data is archived with Session Code %1.';
+
+    PROCEDURE CopyToArchive@1000(CurrSessionId@1001 : Integer);
+    VAR
+      ProfilerArchive@1002 : Record 17026002;
+      ProfilerEvent@1003 : Record 17026001;
+      ProfilerSessionArch@1004 : Record 17026005;
+      SessionCode@1005 : Code[20];
+    BEGIN
+      IF FindSessionCode(SessionCode) THEN BEGIN
+        ProfilerEvent.RESET;
+        ProfilerEvent.SETRANGE("Session ID",CurrSessionId);
+        IF ProfilerEvent.FINDSET THEN BEGIN
+          REPEAT
+            ProfilerArchive.INIT;
+            ProfilerArchive.TRANSFERFIELDS(ProfilerEvent);
+            ProfilerArchive."Session Code" := SessionCode;
+            ProfilerArchive.INSERT;
+          UNTIL ProfilerEvent.NEXT = 0;
+          MESSAGE(CopyedToArchMsg,SessionCode);
+        END;
+      END;
+    END;
+
+    LOCAL PROCEDURE FindSessionCode@1001(VAR SessionCode@1000 : Code[20]) : Boolean;
+    VAR
+      ProfilerSessionArch@1002 : Record 17026005;
+      PerfSessionArchived@1001 : Page 17026005;
+    BEGIN
+      PerfSessionArchived.LOOKUPMODE(TRUE);
+      IF PerfSessionArchived.RUNMODAL = ACTION::LookupOK THEN BEGIN
+        PerfSessionArchived.GETRECORD(ProfilerSessionArch);
+        ProfilerSessionArch.TESTFIELD(Code);
+        SessionCode := ProfilerSessionArch.Code;
+
+        EXIT(RemoveExistingArchLines(SessionCode));
+      END;
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE RemoveExistingArchLines@1002(SessionCode@1000 : Code[20]) : Boolean;
+    VAR
+      ProfilerArchive@1001 : Record 17026002;
+    BEGIN
+      ProfilerArchive.RESET;
+      ProfilerArchive.SETRANGE("Session Code",SessionCode);
+      IF NOT ProfilerArchive.ISEMPTY THEN BEGIN
+        IF NOT CONFIRM(DeleteArchiveQst,FALSE,SessionCode) THEN
+          EXIT(FALSE);
+        ProfilerArchive.DELETEALL;
+      END;
+      EXIT(TRUE);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 17026002 Performance Profiler Archive
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20-04-27;
+    Time=09:38:53;
+    Modified=Yes;
+    Version List=Performance Profiler;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Id                  ;Integer        }
+    { 3   ;   ;Indentation         ;Integer        }
+    { 4   ;   ;Object Type         ;Option        ;CaptionML=ENU=Object Type;
+                                                   OptionCaptionML=ENU=TableData,Table,Form,Report,Dataport,Codeunit,XMLport,MenuSuite,Page,Query,System,FieldNumber;
+                                                   OptionString=TableData,Table,Form,Report,Dataport,Codeunit,XMLport,MenuSuite,Page,Query,System,FieldNumber }
+    { 5   ;   ;Object ID           ;Integer       ;TableRelation=Object.ID WHERE (Type=FIELD(Object Type));
+                                                   TestTableRelation=No;
+                                                   CaptionML=ENU=Object ID }
+    { 6   ;   ;Line No             ;Integer        }
+    { 7   ;   ;Statement           ;Text250        }
+    { 8   ;   ;Duration            ;Decimal        }
+    { 9   ;   ;MinDuration         ;Decimal        }
+    { 10  ;   ;MaxDuration         ;Decimal        }
+    { 11  ;   ;LastActive          ;Decimal        }
+    { 12  ;   ;HitCount            ;Integer        }
+    { 13  ;   ;Total               ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Performance Profiler Events".Duration WHERE (Indentation=CONST(0))) }
+    { 14  ;   ;FullStatement       ;BLOB           }
+    { 15  ;   ;Function Name       ;Text250       ;DataClassification=ToBeClassified }
+    { 20  ;   ;Session Code        ;Code20         }
+  }
+  KEYS
+  {
+    {    ;Session Code,Id                         ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 17026005 Performance Session Archived
+{
+  OBJECT-PROPERTIES
+  {
+    Date=;
+    Time=;
+    Version List=Performance Profiler;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    OnDelete=VAR
+               PerformanceProfilerArchive@1000 : Record 17026002;
+             BEGIN
+               PerformanceProfilerArchive.SETRANGE("Session Code",Code);
+               PerformanceProfilerArchive.DELETEALL;
+             END;
+
+    LookupPageID=Page17026005;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20         }
+    { 2   ;   ;Description         ;Text250        }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 17026001 Performance Profiler
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20-04-27;
+    Time=09:40:18;
+    Modified=Yes;
+    Version List=Performance Profiler;
+  }
+  PROPERTIES
+  {
+    Permissions=;
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=Yes;
+    SourceTable=Table17026001;
+    PageType=List;
+    PromotedActionCategoriesML=ENU=New,Process,Report,Archive;
+    OnInit=BEGIN
+             MaxStatementLength := 250;
+             Threshold := 0;
+             TargetSessionID := SESSIONID;
+             TargetSessionIDEditable := TRUE;
+             MultipleSessionsId := -1;
+           END;
+
+    OnOpenPage=BEGIN
+                 // Assume that profiler hasn't been started.
+                 // This assumption might be wrong.
+                 ProfilerStarted := FALSE;
+                 IF (TargetSessionID <> MultipleSessionsId) THEN
+                   Rec.SETFILTER("Session ID", '=%1', TargetSessionID);
+
+                 IF (Rec.ISEMPTY) THEN BEGIN
+                   Rec."Session ID" := TargetSessionID;
+                   Rec.INSERT;
+                 END;
+
+                 PerformanceProfiler := PerformanceProfiler.EtwPerformanceProfiler();
+               END;
+
+    OnAfterGetRecord=VAR
+                       LinesHit@1003 : Integer;
+                     BEGIN
+                     END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           CALCFIELDS(Total);
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 15      ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 14      ;1   ;Action    ;
+                      Name=Start;
+                      Promoted=Yes;
+                      Enabled=NOT ProfilerStarted;
+                      PromotedIsBig=Yes;
+                      Image=Start;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ProfilerRecord@1000 : Record 17026001;
+                                 i@1001 : Integer;
+                               BEGIN
+                                 CLEAR(Rec);
+
+                                 IF (MultipleSessionsId = TargetSessionID) THEN BEGIN
+                                   CLEAR(Rec);
+                                   Rec.INIT;
+                                   Rec.DELETEALL;
+                                 END ELSE BEGIN
+                                   Rec.SETFILTER("Session ID", '=%1', TargetSessionID);
+                                   Rec.DELETEALL;
+                                 END;
+
+                                 PerformanceProfiler.Start(TargetSessionID, Threshold);
+
+                                 ProfilerStarted := TRUE;
+                               END;
+                                }
+      { 3       ;1   ;Action    ;
+                      Name=Stop;
+                      Promoted=Yes;
+                      Enabled=ProfilerStarted;
+                      PromotedIsBig=Yes;
+                      Image=Stop;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 WaitForDataToBeCollected;
+                                 PerformanceProfiler.Stop;
+
+                                 ProfilerStarted := FALSE;
+
+                                 CopyEventsFromProfilerToTable;
+                                 IF (TargetSessionID <> MultipleSessionsId) THEN
+                                   Rec.SETFILTER("Session ID", '=%1', TargetSessionID);
+                               END;
+                                }
+      { 20      ;1   ;Action    ;
+                      Name=Analyze ETL File;
+                      Promoted=Yes;
+                      Enabled=NOT ProfilerStarted;
+                      PromotedIsBig=Yes;
+                      Image=AnalysisView;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ETLFileName@1000 : Text;
+                               BEGIN
+                                 ETLFileName := OpenFileDialog('Analyze ETL File', 'Trace Files (*.etl)|*.etl');
+
+                                 IF (ETLFileName <> '') THEN BEGIN
+                                   PerformanceProfiler.AnalyzeETLFile(ETLFileName,Threshold);
+
+                                   CLEAR(Rec);
+                                   Rec.INIT;
+                                   Rec.DELETEALL;
+
+                                   CopyEventsFromProfilerToTable;
+                                 END;
+                               END;
+                                }
+      { 10      ;1   ;Action    ;
+                      Name=Clear Codeunit 1 calls;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ClearFilter;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 codeUnit1Call@1000 : Boolean;
+                               BEGIN
+                                 codeUnit1Call := FALSE;
+
+                                 FINDFIRST;
+
+                                 REPEAT
+                                   IF (Indentation = 0) THEN BEGIN
+                                     IF (("Object Type" = "Object Type"::Codeunit) AND ("Object ID" = 1)) THEN
+                                       codeUnit1Call := TRUE
+                                     ELSE
+                                       codeUnit1Call := FALSE;
+                                   END;
+
+                                   IF (codeUnit1Call) THEN
+                                    DELETE;
+                                 UNTIL NEXT = 0;
+                               END;
+                                }
+      { 25      ;1   ;Action    ;
+                      Name=Get Statement;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Comment;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 InStream@1000 : InStream;
+                                 StatementBigTxt@1001 : BigText;
+                                 StatementTxt@1002 : Text;
+                               BEGIN
+                                 CALCFIELDS(FullStatement);
+
+                                 FullStatement.CREATEINSTREAM(InStream);
+                                 StatementBigTxt.READ(InStream);
+
+                                 StatementBigTxt.GETSUBTEXT(StatementTxt, 1, StatementBigTxt.LENGTH);
+
+                                 MESSAGE(StatementTxt);
+                               END;
+                                }
+      { 27      ;1   ;Action    ;
+                      Name=Copy To Archive;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyWorksheet;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 CopyToArchive("Session ID");
+                               END;
+                                }
+      { 26      ;1   ;Action    ;
+                      Name=Archive;
+                      RunObject=Page 17026002;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Archive;
+                      PromotedCategory=Category4 }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 16  ;1   ;Group     ;
+                CaptionML=ENU=Configuration;
+                GroupType=Group }
+
+    { 12  ;2   ;Field     ;
+                Name=Target Session ID;
+                Lookup=Yes;
+                SourceExpr=TargetSessionID;
+                TableRelation="Active Session"."Session ID";
+                Editable=TargetSessionIDEditable;
+                OnValidate=BEGIN
+                             IF (TargetSessionID <> MultipleSessionsId) THEN
+                               Rec.SETFILTER("Session ID", '=%1', TargetSessionID);
+                           END;
+                            }
+
+    { 19  ;2   ;Field     ;
+                Name=Threshold;
+                SourceExpr=Threshold }
+
+    { 21  ;2   ;Field     ;
+                Name=ProfileMultipleSessions;
+                CaptionML=ENU=Profile multiple Sessions;
+                SourceExpr=ProfileMultipleSessions;
+                OnValidate=BEGIN
+                             IF (ProfileMultipleSessions) THEN BEGIN
+                               TargetSessionID := MultipleSessionsId;
+                               TargetSessionIDEditable := FALSE
+                             END ELSE BEGIN
+                               TargetSessionID := SESSIONID;
+                               TargetSessionIDEditable := TRUE
+                             END;
+                           END;
+                            }
+
+    { 2   ;1   ;Group     ;
+                Name=Call Tree;
+                Editable=FALSE;
+                IndentationColumnName=Indentation;
+                ShowAsTree=Yes;
+                GroupType=Repeater }
+
+    { 7   ;2   ;Field     ;
+                SourceExpr="Object Type";
+                Enabled=FALSE;
+                Editable=FALSE }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr="Object ID" }
+
+    { 28  ;2   ;Field     ;
+                SourceExpr="Function Name" }
+
+    { 11  ;2   ;Field     ;
+                SourceExpr="Line No" }
+
+    { 5   ;2   ;Field     ;
+                SourceExpr=Statement }
+
+    { 9   ;2   ;Field     ;
+                CaptionML=ENU=Duration (ms);
+                SourceExpr=Duration;
+                Style=Attention }
+
+    { 13  ;2   ;Field     ;
+                SourceExpr=MinDuration }
+
+    { 22  ;2   ;Field     ;
+                SourceExpr=MaxDuration }
+
+    { 23  ;2   ;Field     ;
+                SourceExpr=LastActive }
+
+    { 24  ;2   ;Field     ;
+                SourceExpr=HitCount }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr=Id }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Session ID" }
+
+    { 17  ;1   ;Group     ;
+                GroupType=Group }
+
+    { 18  ;2   ;Field     ;
+                CaptionML=ENU=Total Time (ms):;
+                SourceExpr=Total;
+                Enabled=FALSE;
+                Editable=FALSE;
+                Style=Strong;
+                StyleExpr=TRUE }
+
+  }
+  CODE
+  {
+    VAR
+      ProgressDialog@1004 : Dialog;
+      PerformanceProfiler@1000 : DotNet "'EtwPerformanceProfiler, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null'.EtwPerformanceProfiler.EtwPerformanceProfiler";
+      ProfilerStarted@1001 : Boolean INDATASET;
+      TargetSessionIDEditable@1008 : Boolean;
+      TargetSessionID@1003 : Integer INDATASET;
+      PleaseWaitCollectingData@1005 : TextConst 'ENU=Collecting performance data \\Please wait #1';
+      Threshold@1006 : Integer;
+      MultipleSessionsId@1002 : Integer;
+      MaxStatementLength@1010 : Integer;
+      ProfileMultipleSessions@1007 : Boolean;
+
+    LOCAL PROCEDURE WaitForDataToBeCollected@4();
+    VAR
+      SecondsToWait@1000 : Integer;
+    BEGIN
+      SecondsToWait := 3;
+      ProgressDialog.OPEN(PleaseWaitCollectingData);
+      WHILE SecondsToWait > 0 DO BEGIN
+        ProgressDialog.UPDATE(1,STRSUBSTNO('%1 s',SecondsToWait));
+        SLEEP(1000);
+        SecondsToWait -= 1;
+      END;
+      ProgressDialog.CLOSE;
+    END;
+
+    PROCEDURE OpenFileDialog@1(WindowTitle@1000 : Text[50];FilterString@1002 : Text) : Text;
+    VAR
+      OpenFileDialog@1006 : DotNet "'System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Windows.Forms.OpenFileDialog" RUNONCLIENT;
+      DialagResult@1003 : DotNet "'System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Windows.Forms.DialogResult" RUNONCLIENT;
+    BEGIN
+      OpenFileDialog := OpenFileDialog.OpenFileDialog;
+      OpenFileDialog.ShowReadOnly := FALSE;
+      OpenFileDialog.Title := WindowTitle;
+      OpenFileDialog.Filter := FilterString;
+
+      DialagResult := OpenFileDialog.ShowDialog;
+      IF DialagResult.CompareTo(DialagResult.OK) = 0 THEN
+        EXIT(OpenFileDialog.FileName);
+      EXIT('');
+    END;
+
+    LOCAL PROCEDURE CopyEventsFromProfilerToTable@12();
+    VAR
+      OutStream@1003 : OutStream;
+      I@1000 : Integer;
+      StatementTxt@1002 : Text;
+      StatementBigTxt@1001 : BigText;
+    BEGIN
+      I := 1;
+
+      WHILE (PerformanceProfiler.CallTreeMoveNext) DO BEGIN
+        CLEAR(Rec);
+        Rec.INIT;
+        Rec.Id := I;
+        Rec."Session ID" := PerformanceProfiler.CallTreeCurrentStatementSessionId;
+        Rec.Indentation := PerformanceProfiler.CallTreeCurrentStatementIndentation;
+        Rec."Object Type" := PerformanceProfiler.CallTreeCurrentStatementOwningObjectType;
+        Rec."Object ID" := PerformanceProfiler.CallTreeCurrentStatementOwningObjectId;
+        Rec."Function Name" := PerformanceProfiler.CallTreeCurrentFunctionName;
+        Rec."Line No" := PerformanceProfiler.CallTreeCurrentStatementLineNo;
+
+        StatementTxt := PerformanceProfiler.CallTreeCurrentStatement;
+        IF(STRLEN(StatementTxt) > MaxStatementLength) THEN BEGIN
+          Statement := COPYSTR(StatementTxt,1,MaxStatementLength);
+        END ELSE BEGIN
+          Rec.Statement := StatementTxt;
+        END;
+        CLEAR(StatementBigTxt);
+        StatementBigTxt.ADDTEXT(StatementTxt);
+        FullStatement.CREATEOUTSTREAM(OutStream);
+        StatementBigTxt.WRITE(OutStream);
+
+        Rec.Duration := PerformanceProfiler.CallTreeCurrentStatementDurationMs;
+        Rec.MinDuration := PerformanceProfiler.CallTreeCurrentStatementMinDurationMs;
+        Rec.MaxDuration := PerformanceProfiler.CallTreeCurrentStatementMaxDurationMs;
+        Rec.LastActive := PerformanceProfiler.CallTreeCurrentStatementLastActiveMs;
+        Rec.HitCount := PerformanceProfiler.CallTreeCurrentStatementHitCount;
+        Rec.INSERT;
+
+        I += 1;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 17026002 Performance Profiler Archive
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20-04-27;
+    Time=09:39:14;
+    Modified=Yes;
+    Version List=Performance Profiler;
+  }
+  PROPERTIES
+  {
+    Permissions=;
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table17026002;
+    PageType=Worksheet;
+    OnInit=BEGIN
+             IF FINDFIRST THEN
+               TargetSessionCode := "Session Code";
+           END;
+
+    OnOpenPage=BEGIN
+                 Rec.SETRANGE("Session Code",TargetSessionCode);
+               END;
+
+    OnAfterGetRecord=VAR
+                       LinesHit@1003 : Integer;
+                     BEGIN
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 1002    ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1003    ;1   ;Action    ;
+                      Name=Calculate Ratio;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CalculateHierarchy;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 BaseDuration := Duration;
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 16  ;1   ;Group     ;
+                CaptionML=ENU=Configuration;
+                GroupType=Group }
+
+    { 12  ;2   ;Field     ;
+                Name=Target Session Code;
+                Lookup=Yes;
+                SourceExpr=TargetSessionCode;
+                TableRelation="Performance Session Archived";
+                OnValidate=BEGIN
+                             Rec.SETRANGE("Session Code",TargetSessionCode);
+                             CurrPage.UPDATE;
+                           END;
+                            }
+
+    { 1005;2   ;Field     ;
+                Name=Duration Threshold;
+                SourceExpr=DurationThreshold;
+                OnValidate=BEGIN
+                             SETFILTER(Duration,'%1..',DurationThreshold);
+                             CurrPage.UPDATE;
+                           END;
+                            }
+
+    { 1004;2   ;Field     ;
+                Name=Base Duration;
+                SourceExpr=BaseDuration;
+                OnValidate=BEGIN
+                             CurrPage.UPDATE;
+                           END;
+                            }
+
+    { 2   ;1   ;Group     ;
+                Name=Call Tree;
+                Editable=FALSE;
+                IndentationColumnName=Indentation;
+                ShowAsTree=Yes;
+                GroupType=Repeater }
+
+    { 7   ;2   ;Field     ;
+                SourceExpr="Object Type";
+                Enabled=FALSE;
+                Editable=FALSE }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr="Object ID" }
+
+    { 15  ;2   ;Field     ;
+                SourceExpr="Function Name" }
+
+    { 11  ;2   ;Field     ;
+                SourceExpr="Line No" }
+
+    { 5   ;2   ;Field     ;
+                SourceExpr=Statement }
+
+    { 9   ;2   ;Field     ;
+                CaptionML=ENU=Duration (ms);
+                SourceExpr=Duration;
+                Style=Attention }
+
+    { 13  ;2   ;Field     ;
+                SourceExpr=MinDuration }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr=MaxDuration }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr=LastActive }
+
+    { 3   ;2   ;Field     ;
+                SourceExpr=HitCount }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr=Id }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Session Code";
+                Visible=false }
+
+    { 1000;2   ;Field     ;
+                SourceExpr=Indentation }
+
+    { 1001;2   ;Field     ;
+                Name=Ratio;
+                CaptionML=ENU=Ratio %;
+                DecimalPlaces=3:3;
+                SourceExpr=GetRatio }
+
+  }
+  CODE
+  {
+    VAR
+      ProgressDialog@1004 : Dialog;
+      PerformanceProfiler@1000 : DotNet "'EtwPerformanceProfiler, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null'.EtwPerformanceProfiler.EtwPerformanceProfiler";
+      ProfilerStarted@1001 : Boolean INDATASET;
+      I@1002 : Integer;
+      TargetSessionCode@1003 : Code[20] INDATASET;
+      PleaseWaitCollectingData@1005 : TextConst 'ENU=Collecting performance data \\Please wait #1';
+      BaseDuration@1006 : Decimal;
+      DurationThreshold@1007 : Decimal;
+
+    LOCAL PROCEDURE GetRatio@1000() : Decimal;
+    BEGIN
+      IF BaseDuration <> 0 THEN
+        EXIT(Duration / BaseDuration * 100);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 17026005 Performance Session Archived
+{
+  OBJECT-PROPERTIES
+  {
+    Date=;
+    Time=;
+    Version List=Performance Profiler;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table17026005;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1000;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 1001;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1002;2   ;Field     ;
+                SourceExpr=Code }
+
+    { 1003;2   ;Field     ;
+                SourceExpr=Description }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
